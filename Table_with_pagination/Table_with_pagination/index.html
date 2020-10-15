@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Table</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    </head>
+    <style>
+        .div1{
+            text-align: center;
+            margin:0;
+            width:100%;
+            }
+        .div2{
+            float:right;
+            margin:10px;
+            width:45%;
+            }
+        .div3{
+            float:right;
+            margin:10px;
+            width:45%;
+            }
+    </style>
+    <label>Sort By:</label>
+    <select name="filters" id="filters">
+        <option value="date_added">Recent Projects</option>
+        <option value="category_name">Category name</option>
+        <option value="username">Username</option>
+        <option value="project_title">Project title</option>
+    </select>
+    <table class="table table-striped">
+        <tr class="bg-info">
+            <th>Project title</th>
+            <th>User name</th>
+            <th>Category name</th>
+            <th>Date</th>
+        </tr>
+        <tbody id="my-table">
+        </tbody>
+    </table>
+    <div class="div1">
+            <div class="div2"><button class="btn btn-primary" onclick="getPagination('next')">Next</button> </div>
+            <div class="div3"><button class="btn btn-primary" onclick="getPagination('prev')">Prev</button> </div>
+    </div>      
+    <script>
+
+        // Declaring variables
+
+        var myData=[];
+        var pg_no=1;
+        var category="date_added";
+        var totalcount=0;
+        $(document).ready(function(){
+        
+        // Getting the values from DB
+            
+        getApiCall( `getdata`)
+
+        // Getting the sorted values
+
+        $('#filters').change(function() { 
+            category = $(this).val()
+            pg_no=1;
+            getTable(`sortdata/${category}/${pg_no}`)
+            });  
+        });
+
+
+        function getApiCall(params){
+            $.ajax({
+                method:'GET',
+                url: 'http://localhost:8000/'+params,
+                success: function(response){
+                    totalcount= response.length
+                    // myData = response
+                    // buildTable(myData)
+                    //console.log(totalcount)
+                    getTable(`getdata/${pg_no}`)
+                    }
+                })
+            }
+
+        // Method to get only 2 values from database    
+
+        function getTable(params){
+            $.ajax({
+                method:'GET',
+                url: 'http://localhost:8000/'+params,
+                success: function(response){
+                    myData = response
+                    buildTable(myData)
+                
+                }
+            })
+        }
+
+        // Setting the page numbers using next and prev buttons
+
+        function getPagination(status){
+            if(status=='prev' && pg_no!=1){
+                // console.log(status,pg_no)
+                pg_no=pg_no-1;
+                getTable(`sortdata/${category}/${pg_no}`)
+            }
+            else if(status=='next' && (pg_no*2)<=totalcount){
+                //console.log(status,pg_no)
+                pg_no=pg_no+1;
+                getTable(`sortdata/${category}/${pg_no}`)
+            }
+        }
+
+        // Method to generate table
+
+        function buildTable(data){
+            var table = document.getElementById('my-table')
+            var row="";
+            for(let i = 0; i < data.length ;i++)
+            {
+                row += "<tr><td>"+data[i].project_title+"</td><td>"+data[i].username+"</td><td>"+data[i].category_name+"</td><td>"+data[i].date_added+"</td></tr>"
+                
+            }
+            table.innerHTML = row;
+        }   
+    </script>
+</html>
+
